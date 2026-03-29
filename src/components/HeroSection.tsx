@@ -29,11 +29,6 @@ const itemVariants: Variants = {
 const HeroSection = () => {
   return (
     <section className="relative gradient-navy text-primary-foreground overflow-hidden">
-      {/* Decorative elements */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-10 left-10 w-64 h-64 rounded-full border border-gold" />
-        <div className="absolute bottom-10 right-10 w-96 h-96 rounded-full border border-gold" />
-      </div>
 
       <div className="container-custom py-20 md:py-32 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
