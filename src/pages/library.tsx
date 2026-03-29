@@ -30,7 +30,7 @@ export const getStaticProps = async () => {
     .filter(file => file.endsWith('.pdf'))
     .filter(file => !file.toLowerCase().includes("requirements"))
     .map((filename, index) => {
-      let cleanName = filename.replace(/\.pdf$/i, "").trim();
+      const cleanName = filename.replace(/\.pdf$/i, "").trim();
       let category = "قانون العام";
       
       if (cleanName.includes("مدني") || cleanName.includes("ايجار")) category = "مدني";

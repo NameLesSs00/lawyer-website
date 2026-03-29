@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { motion } from "framer-motion";
 import { Scale } from "lucide-react";
 
 const navItems = [
