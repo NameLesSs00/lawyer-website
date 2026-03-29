@@ -1,19 +1,22 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BookOpen, Download, Search, ChevronRight, ChevronLeft } from "lucide-react";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "../lib/firebase";
+
 import fs from "fs";
 import path from "path";
 
 type Book = {
   id: string;
-  title: string;
-  filename: string;
-  description: string;
+  Title: string; // Case-sensitive to match firestore schema request, mapped to local as well
   category: string;
+  content: string; // Description
+  link: string; // Drive URL or local relative path
 };
 
 type LibraryPageProps = {
-  books: Book[];
+  localBooks: Book[];
 };
 
 export const getStaticProps = async () => {
@@ -21,14 +24,15 @@ export const getStaticProps = async () => {
   let filenames: string[] = [];
   
   try {
-    filenames = fs.readdirSync(pdfDirectory);
+    if (fs.existsSync(pdfDirectory)) {
+      filenames = fs.readdirSync(pdfDirectory);
+    }
   } catch (error) {
     console.error("Error reading PDF directory:", error);
   }
 
-  const books: Book[] = filenames
+  const localBooks: Book[] = filenames
     .filter(file => file.endsWith('.pdf'))
-    .filter(file => !file.toLowerCase().includes("requirements"))
     .map((filename, index) => {
       const cleanName = filename.replace(/\.pdf$/i, "").trim();
       let category = "قانون العام";
@@ -42,35 +46,53 @@ export const getStaticProps = async () => {
       else if (cleanName.includes("ضريب") || cleanName.includes("قيمة مضافة")) category = "ضريبي";
 
       return {
-        id: index.toString(),
-        title: cleanName,
-        filename,
-        description: `نسخة من ${cleanName} بصيغة بي دي إف.`,
-        category
+        id: `local-${index}`,
+        Title: cleanName,
+        category,
+        content: `نسخة من ${cleanName} بصيغة بي دي إف.`,
+        link: `/pdf/${encodeURIComponent(filename)}`
       };
     });
 
   return {
     props: {
-      books,
+        localBooks,
     },
   };
 };
 
 const ITEMS_PER_PAGE = 12;
 
-const LibraryPage = ({ books }: LibraryPageProps) => {
+const LibraryPage = ({ localBooks }: LibraryPageProps) => {
+  const [books, setBooks] = useState<Book[]>(localBooks || []);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  const handleDownload = (filename: string) => {
-    window.open(`/pdf/${encodeURIComponent(filename)}`, "_blank");
+  useEffect(() => {
+    const fetchPDFs = async () => {
+      try {
+        const snapshot = await getDocs(collection(db, "PDFS"));
+        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Book));
+        setBooks([...(localBooks || []), ...data]);
+      } catch (error) {
+        console.error("Error fetching PDFs:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPDFs();
+  }, []);
+
+  const handleDownload = (link: string) => {
+    window.open(link, "_blank");
   };
 
   const filteredBooks = books.filter(
     (book) =>
-      book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      book.description.toLowerCase().includes(searchQuery.toLowerCase())
+      book.Title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      book.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      book.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const totalPages = Math.ceil(filteredBooks.length / ITEMS_PER_PAGE);
@@ -84,7 +106,6 @@ const LibraryPage = ({ books }: LibraryPageProps) => {
     }
   };
 
-  // Reset to first page when search changes
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
     setCurrentPage(1);
@@ -101,7 +122,7 @@ const LibraryPage = ({ books }: LibraryPageProps) => {
             <span className="text-gold font-medium text-sm">مكتبتنا الرقمية</span>
             <h1 className="text-3xl md:text-4xl font-heading font-bold text-foreground mt-2">المكتبة القانونية</h1>
             <div className="w-16 h-1 bg-gold mt-4 rounded-full" />
-            <p className="text-muted-foreground mt-4 text-sm">تضم المكتبة أكثر من {books.length} ملفاً من القوانين واللوائح.</p>
+            {!loading && <p className="text-muted-foreground mt-4 text-sm">تضم المكتبة {books.length} ملفاً من القوانين واللوائح.</p>}
         </motion.div>
 
         {/* Search Bar */}
@@ -124,11 +145,17 @@ const LibraryPage = ({ books }: LibraryPageProps) => {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+          {loading && books.length === 0 ? (
+            <div className="col-span-full flex justify-center py-20">
+              <div className="w-10 h-10 border-4 border-gold border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
             <AnimatePresence mode="popLayout">
                 {currentBooks.length > 0 ? (
                     currentBooks.map((book) => (
                         <motion.div
                             key={book.id}
+                            layout
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
@@ -142,17 +169,17 @@ const LibraryPage = ({ books }: LibraryPageProps) => {
                             <div className="flex-1 flex flex-col justify-between">
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between gap-2">
-                                        <h3 className="font-heading font-bold text-foreground text-sm md:text-base leading-tight group-hover:text-gold transition-colors line-clamp-2" title={book.title}>
-                                            {book.title}
+                                        <h3 className="font-heading font-bold text-foreground text-sm md:text-base leading-tight group-hover:text-gold transition-colors line-clamp-2" title={book.Title}>
+                                            {book.Title}
                                         </h3>
                                     </div>
                                     <div className="flex items-center gap-2 mt-2">
                                         <span className="text-[10px] bg-navy/5 text-navy px-2 py-0.5 rounded-full uppercase font-extrabold tracking-wider whitespace-nowrap">{book.category}</span>
                                     </div>
-                                    <p className="text-muted-foreground text-xs leading-relaxed line-clamp-2">{book.description}</p>
+                                    <p className="text-muted-foreground text-xs leading-relaxed line-clamp-2">{book.content}</p>
                                 </div>
                                 <button 
-                                    onClick={() => handleDownload(book.filename)}
+                                    onClick={() => handleDownload(book.link)}
                                     className="w-full sm:w-auto inline-flex items-center justify-center gap-2 text-xs bg-navy text-primary-foreground font-bold px-4 py-2 rounded-lg hover:bg-gold hover:text-navy transition-all duration-300 mt-4 shadow-sm group/btn"
                                 >
                                     <Download className="w-3.5 h-3.5 transition-transform group-hover/btn:translate-y-0.5" />
@@ -171,10 +198,11 @@ const LibraryPage = ({ books }: LibraryPageProps) => {
                     </motion.div>
                 )}
             </AnimatePresence>
+          )}
         </div>
 
         {/* Pagination Controls */}
-        {totalPages > 1 && (
+        {!loading && totalPages > 1 && (
             <div className="flex justify-center items-center gap-4 mt-8">
                 <button
                     onClick={() => handlePageChange(currentPage - 1)}

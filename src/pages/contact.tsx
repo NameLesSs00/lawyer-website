@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Send, Phone, MapPin, Clock } from "lucide-react";
+import Link from "next/link";
 import { z } from "zod";
 
 const contactSchema = z.object({
@@ -10,7 +11,7 @@ const contactSchema = z.object({
   details: z.string().trim().min(1, "تفاصيل المشكلة مطلوبة").max(2000),
 });
 
-const phoneNumber = "+201200039617"; // Test phone number
+const phoneNumber = "201229149719"; // Client phone number
 
 const ContactPage = () => {
   const [form, setForm] = useState({ name: "", phone: "", subject: "", details: "" });
@@ -61,32 +62,44 @@ const ContactPage = () => {
           >
             <div className="glass-card p-6 space-y-6">
               <h3 className="font-heading font-bold text-lg text-foreground">معلومات التواصل</h3>
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-navy flex items-center justify-center shrink-0">
-                    <MapPin className="w-5 h-5 text-gold" />
+              <div className="space-y-6">
+                <Link 
+                  href="https://maps.app.goo.gl/UpX2ZhYrPyQvrmW97?g_st=aw"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-start gap-4 group transition-all duration-300"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-navy flex items-center justify-center shrink-0 group-hover:bg-gold transition-colors duration-300 shadow-sm">
+                    <MapPin className="w-6 h-6 text-gold group-hover:text-navy transition-colors duration-300" />
                   </div>
-                  <div>
-                    <p className="font-medium text-foreground text-sm">العنوان</p>
-                    <p className="text-muted-foreground text-sm">شارع النصر الدهار أعلى شركة اتصالات بجوار سبينس، الغردقة، البحر الأحمر</p>
+                  <div className="flex flex-col gap-1">
+                    <p className="font-heading font-bold text-foreground text-sm group-hover:text-gold transition-colors">العنوان</p>
+                    <p className="text-muted-foreground text-xs md:text-sm leading-relaxed">شارع النصر الدهار أعلى شركة اتصالات بجوار سبينس، الغردقة، البحر الأحمر</p>
                   </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-navy flex items-center justify-center shrink-0">
-                    <Phone className="w-5 h-5 text-gold" />
+                </Link>
+
+                <Link 
+                  href="https://wa.me/201229149719"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-start gap-4 group transition-all duration-300"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-navy flex items-center justify-center shrink-0 group-hover:bg-gold transition-colors duration-300 shadow-sm">
+                    <Phone className="w-6 h-6 text-gold group-hover:text-navy transition-colors duration-300" />
                   </div>
-                  <div>
-                    <p className="font-medium text-foreground text-sm">الهاتف</p>
-                    <p className="text-muted-foreground text-sm" dir="ltr">+20 100 000 0000</p>
+                  <div className="flex flex-col gap-1">
+                    <p className="font-heading font-bold text-foreground text-sm group-hover:text-gold transition-colors">الهاتف</p>
+                    <p className="text-muted-foreground text-xs md:text-sm font-medium transition-colors" dir="ltr">+20 12 29149719</p>
                   </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-navy flex items-center justify-center shrink-0">
-                    <Clock className="w-5 h-5 text-gold" />
+                </Link>
+
+                <div className="flex items-start gap-4 transition-all duration-300">
+                  <div className="w-12 h-12 rounded-xl bg-navy flex items-center justify-center shrink-0 shadow-sm">
+                    <Clock className="w-6 h-6 text-gold" />
                   </div>
-                  <div>
-                    <p className="font-medium text-foreground text-sm">ساعات العمل</p>
-                    <p className="text-muted-foreground text-sm">السبت - الخميس: 9 ص - 5 م</p>
+                  <div className="flex flex-col gap-1">
+                    <p className="font-heading font-bold text-foreground text-sm">ساعات العمل</p>
+                    <p className="text-muted-foreground text-xs md:text-sm leading-relaxed">السبت - الخميس: 9 ص - 5 م</p>
                   </div>
                 </div>
               </div>

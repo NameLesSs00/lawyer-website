@@ -56,27 +56,37 @@ const Footer = () => {
           <div className="space-y-4 md:space-y-6">
             <h3 className="text-gold font-heading font-bold text-base md:text-lg border-r-4 border-gold pr-3 md:pr-4">تواصل معنا</h3>
             <div className="flex flex-col gap-3 md:gap-5">
-              <div className="flex items-start gap-3 md:gap-4 text-primary-foreground/70 group">
+              <Link 
+                href="https://maps.app.goo.gl/UpX2ZhYrPyQvrmW97?g_st=aw"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-start gap-3 md:gap-4 text-primary-foreground/70 group"
+              >
                 <div className="p-1.5 md:p-2 rounded-lg bg-white/5 border border-white/10 group-hover:border-gold/50 group-hover:bg-gold/10 transition-all duration-300">
                   <MapPin className="w-4 h-4 md:w-5 md:h-5 text-gold shrink-0" />
                 </div>
                 <div className="flex flex-col">
                   <span className="text-[10px] text-gold/50 font-bold uppercase tracking-wider">الموقع</span>
-                  <span className="text-xs md:text-base group-hover:text-primary-foreground transition-colors">الغردقة، البحر الأحمر</span>
+                  <span className="text-xs md:text-base group-hover:text-gold transition-colors">الغردقة، البحر الأحمر</span>
                 </div>
-              </div>
+              </Link>
 
-              <div className="flex items-start gap-3 md:gap-4 text-primary-foreground/70 group">
+              <Link 
+                href="https://wa.me/201229149719"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-start gap-3 md:gap-4 text-primary-foreground/70 group"
+              >
                 <div className="p-1.5 md:p-2 rounded-lg bg-white/5 border border-white/10 group-hover:border-gold/50 group-hover:bg-gold/10 transition-all duration-300">
                   <Phone className="w-4 h-4 md:w-5 md:h-5 text-gold shrink-0" />
                 </div>
                 <div className="flex flex-col">
                   <span className="text-[10px] text-gold/50 font-bold uppercase tracking-wider">اتصل بنا</span>
-                  <span className="text-xs md:text-base group-hover:text-primary-foreground transition-colors font-medium" dir="ltr">
-                    +20 100 000 0000
+                  <span className="text-xs md:text-base group-hover:text-gold transition-colors font-medium" dir="ltr">
+                    +20 12 29149719
                   </span>
                 </div>
-              </div>
+              </Link>
             </div>
           </div>
         </div>

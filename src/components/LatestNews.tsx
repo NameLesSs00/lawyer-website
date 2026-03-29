@@ -24,31 +24,37 @@ const itemVariants: Variants = {
   },
 };
 
-const newsItems = [
-  {
-    id: 1,
-    title: "تعديلات جديدة على قانون الإيجار القديم",
-    excerpt: "صدر قرار جديد بخصوص تعديلات قانون الإيجار القديم يؤثر على ملايين المستأجرين والملاك...",
-    category: "قانون مدني",
-    date: "2026-03-20",
-  },
-  {
-    id: 2,
-    title: "أحكام محكمة النقض الجديدة في قضايا الأحوال الشخصية",
-    excerpt: "أصدرت محكمة النقض عدة أحكام مهمة تتعلق بحقوق الحضانة والنفقة...",
-    category: "قانون الأسرة",
-    date: "2026-03-18",
-  },
-  {
-    id: 3,
-    title: "قانون العمل الجديد: أبرز التعديلات",
-    excerpt: "تم إقرار تعديلات جوهرية على قانون العمل المصري تشمل حقوق العمال وساعات العمل...",
-    category: "قانون العمل",
-    date: "2026-03-15",
-  },
-];
+import { useState, useEffect } from "react";
+import { collection, getDocs, query, orderBy, limit, Timestamp } from "firebase/firestore";
+import { db } from "../lib/firebase";
+
+type NewsItem = {
+  id: string;
+  title: string;
+  content: string;
+  date: Timestamp;
+};
 
 const LatestNews = () => {
+  const [news, setNews] = useState<NewsItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchLatestNews = async () => {
+      try {
+        const q = query(collection(db, "News"), orderBy("date", "desc"), limit(3));
+        const snapshot = await getDocs(q);
+        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as NewsItem));
+        setNews(data);
+      } catch (error) {
+        console.error("Error fetching latest news:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLatestNews();
+  }, []);
+
   return (
     <section className="section-padding bg-blue-light-custom">
       <div className="container-custom">
@@ -78,25 +84,35 @@ const LatestNews = () => {
           viewport={{ once: true, margin: "-100px" }}
           className="grid grid-cols-1 md:grid-cols-3 gap-6"
         >
-          {newsItems.map((news) => (
-            <motion.div
-              key={news.id}
-              variants={itemVariants}
-              whileHover={{ y: -8, transition: { duration: 0.3 } }}
-              className="bg-card rounded-xl overflow-hidden shadow-card group service-card-hover"
-            >
-              <div className="p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 rounded-full bg-navy/5 flex items-center justify-center icon-box-hover">
-                    <Scale className="w-4 h-4 text-gold icon-color-hover" />
+          {loading ? (
+            <div className="col-span-full flex justify-center py-10">
+              <div className="w-8 h-8 border-4 border-gold border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : news.length === 0 ? (
+            <p className="col-span-full text-center text-muted-foreground">لا توجد أخبار حالياً.</p>
+          ) : (
+            news.map((item) => (
+              <motion.div
+                key={item.id}
+                variants={itemVariants}
+                whileHover={{ y: -8, transition: { duration: 0.3 } }}
+                className="bg-card rounded-xl overflow-hidden shadow-card group service-card-hover"
+              >
+                <div className="p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 rounded-full bg-navy/5 flex items-center justify-center icon-box-hover">
+                      <Scale className="w-4 h-4 text-gold icon-color-hover" />
+                    </div>
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      {item.date?.toDate().toLocaleDateString('ar-EG')}
+                    </span>
                   </div>
-                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{news.category}</span>
+                  <h3 className="font-heading font-bold text-foreground mb-3 line-clamp-2 group-hover:text-gold transition-colors">{item.title}</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed mb-4 line-clamp-3">{item.content}</p>
                 </div>
-                <h3 className="font-heading font-bold text-foreground mb-3 line-clamp-2 group-hover:text-gold transition-colors">{news.title}</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed mb-4 line-clamp-3">{news.excerpt}</p>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            ))
+          )}
         </motion.div>
       </div>
     </section>

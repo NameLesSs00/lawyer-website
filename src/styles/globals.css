@@ -32,6 +32,10 @@
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
+
+  --color-gold: hsl(var(--gold));
+  --color-navy: hsl(var(--navy));
+  --color-navy-dark: hsl(var(--navy-dark));
 }
 
 @layer base {
@@ -225,5 +229,18 @@
 
   .group:hover .icon-color-hover {
     color: hsl(var(--primary));
+  }
+
+  @keyframes marquee-rtl {
+    0%   { transform: translateX(-100%); }
+    100% { transform: translateX(500%); }
+  }
+
+  .animate-marquee-rtl {
+    animation: marquee-rtl 100s linear infinite;
+  }
+
+  .animate-marquee-rtl:hover {
+    animation-play-state: paused;
   }
 }
