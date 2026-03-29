@@ -1,103 +1,93 @@
-import { motion } from "framer-motion";
-import { BookOpen, Download } from "lucide-react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { BookOpen, Download, Search, ChevronRight, ChevronLeft } from "lucide-react";
+import fs from "fs";
+import path from "path";
 
-const books = [
-  {
-    id: 1,
-    title: "الدستور المصرى",
-    filename: "الدستور المصرى.pdf",
-    description: "النسخة الكاملة والمحدثة من الدستور المصرى.",
-    category: "دستوري",
-  },
-  {
-    id: 2,
-    title: "القانون المدني",
-    filename: "قانون رقم 131 لسنة 1948 بإصدار القانون المدني وفقاً لآخر تعديل صادر في 13 أكتوبر عام 2021..pdf",
-    description: "قانون رقم 131 لسنة 1948 بإصدار القانون المدني وفقاً لآخر تعديلات 2021.",
-    category: "مدني",
-  },
-  {
-    id: 3,
-    title: "قانون الإجراءات الجنائية",
-    filename: "قانون رقم 150 لسنة 1950 بإصدار قانون الإجراءات الجنائية وفقاً لآخر تعديل صادر في 16 يناير عام 2024..pdf",
-    description: "قانون رقم 150 لسنة 1950 بإصدار قانون الإجراءات الجنائية وفقاً لآخر تعديلات 2024.",
-    category: "جنائي",
-  },
-  {
-    id: 4,
-    title: "قانون المحاماة",
-    filename: "قانون رقم ١٧ لسنة ١٩٨٣ بإصدار قانون المحاماة وفقاً لآخر تعديل صادر في 8 يوليو 2020..pdf",
-    description: "قانون رقم ١٧ لسنة ١٩٨٣ بإصدار قانون المحاماة وتعديلاته.",
-    category: "إداري",
-  },
-  {
-    id: 5,
-    title: "قانون المرافعات المدنية والتجارية",
-    filename: "قانون رقم 13 لسنة 1968 بإصدار قانون المرافعات المدنية والتجارية وفقاً لآخر تعديل صادر في 10 يولية عام 2024..pdf",
-    description: "قانون رقم 13 لسنة 1968 بإصدار قانون المرافعات المدنية والتجارية وتعديلاته 2024.",
-    category: "تجاري",
-  },
-  {
-    id: 6,
-    title: "قانون الإثبات",
-    filename: "قانون رقم 25 لسنة 1968 بإصدار قانون الإثبات في المواد المدنية والتجارية وفقاً لآخر تعديل صادر في 6 يونية 2007 ..pdf",
-    description: "قانون رقم 25 لسنة 1968 بإصدار قانون الإثبات وتعديلاته.",
-    category: "مدني",
-  },
-  {
-    id: 7,
-    title: "قانون المحكمة الدستورية العليا",
-    filename: "قانون رقم 48 لسنة 1979 بإصدار قانون المحكمة الدستورية العليا وفقاً لآخر تعديل صادر في 15 أغسطس عام 2021..pdf",
-    description: "قانون رقم 48 لسنة 1979 بإصدار قانون المحكمة الدستورية العليا وتعديلاته.",
-    category: "دستوري",
-  },
-  {
-    id: 8,
-    title: "قانون التجارة",
-    filename: "قانون رقم ١٧ لسنة ١٩٩٩ بإصدار قانون التجارة وفقاً لآخر تعديل صادر في 19 فبراير عام 2018..pdf",
-    description: "قانون رقم ١٧ لسنة ١٩٩٩ بإصدار قانون التجارة وتعديلاته.",
-    category: "تجاري",
-  },
-  {
-    id: 9,
-    title: "قانون إيجار الأماكن",
-    filename: "قانون 164 لسنة 2025 بشأن بعض الأحكام المتعلقة بقوانين إيجار الأماكن وإعادة تنظيم العلاقة بين المؤجر والمستأجر محدثاً حتى عام 2025..pdf",
-    description: "قانون 164 لسنة 2025 بشأن قوانين إيجار الأماكن وإعادة تنظيم العلاقة بين المؤجر والمستأجر محدثاً حتى عام 2025.",
-    category: "مدني",
-  },
-  {
-    id: 10,
-    title: "قانون أملاك الدولة الخاصة",
-    filename: "قانون 168 لسنة 2025 بإصدار قانون بعض قواعد وإجراءات التصرف في أملاك الدولة الخاصة محدثاً حتى عام 2025..pdf",
-    description: "قانون 168 لسنة 2025 التصرف في أملاك الدولة الخاصة.",
-    category: "إداري",
-  },
-  {
-    id: 11,
-    title: "قانون الأحوال الشخصية",
-    filename: "قانون رقم 1 لسنة 2000 بإصدار قانون تنظيم بعض أوضاع وإجراءات التقاضي في مسائل الأحوال الشخصية وفقاً لآخر تعديل صادر في 5 سبتمبر عام 2020..pdf",
-    description: "قانون رقم 1 لسنة 2000 بتنظيم أوضاع وإجراءات التقاضي في مسائل الأحوال الشخصية.",
-    category: "أسرة",
-  },
-  {
-    id: 12,
-    title: "قانون الإجراءات الضريبية الموحد",
-    filename: "قانون رقم 206 لسنة 2020 بإصدار قانون الإجراءات الضريبية الموحد وفقاً لآخر تعديل صادر في 12 فبراير عام 2025..pdf",
-    description: "قانون رقم 206 لسنة 2020 بإصدار قانون الإجراءات الضريبية الموحد وتعديلاته 2025.",
-    category: "ضريبي",
-  },
-  {
-    id: 13,
-    title: "قانون إجراءات الطعن بالنقض",
-    filename: "قانون رقم 57 لسنة 1959 بإصدار قانون حالات وإجراءات الطعن أمام محكمة النقض وفقاً لآخر تعديل صادر في 12 ديسمبر عام 2019..pdf",
-    description: "قانون رقم 57 لسنة 1959 بإصدار قانون حالات وإجراءات الطعن أمام محكمة النقض.",
-    category: "إجراءات",
-  },
-];
+type Book = {
+  id: string;
+  title: string;
+  filename: string;
+  description: string;
+  category: string;
+};
 
-const LibraryPage = () => {
+type LibraryPageProps = {
+  books: Book[];
+};
+
+export const getStaticProps = async () => {
+  const pdfDirectory = path.join(process.cwd(), 'public/pdf');
+  let filenames: string[] = [];
+  
+  try {
+    filenames = fs.readdirSync(pdfDirectory);
+  } catch (error) {
+    console.error("Error reading PDF directory:", error);
+  }
+
+  const books: Book[] = filenames
+    .filter(file => file.endsWith('.pdf'))
+    .filter(file => !file.toLowerCase().includes("requirements"))
+    .map((filename, index) => {
+      let cleanName = filename.replace(/\.pdf$/i, "").trim();
+      let category = "قانون العام";
+      
+      if (cleanName.includes("مدني") || cleanName.includes("ايجار")) category = "مدني";
+      else if (cleanName.includes("جنائي")) category = "جنائي";
+      else if (cleanName.includes("إداري") || cleanName.includes("دولة")) category = "إداري";
+      else if (cleanName.includes("أسرة") || cleanName.includes("شخصية")) category = "أسرة";
+      else if (cleanName.includes("تجاري") || cleanName.includes("شركات")) category = "تجاري";
+      else if (cleanName.includes("دستور")) category = "دستوري";
+      else if (cleanName.includes("ضريب") || cleanName.includes("قيمة مضافة")) category = "ضريبي";
+
+      return {
+        id: index.toString(),
+        title: cleanName,
+        filename,
+        description: `نسخة من ${cleanName} بصيغة بي دي إف.`,
+        category
+      };
+    });
+
+  return {
+    props: {
+      books,
+    },
+  };
+};
+
+const ITEMS_PER_PAGE = 12;
+
+const LibraryPage = ({ books }: LibraryPageProps) => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+
   const handleDownload = (filename: string) => {
     window.open(`/pdf/${encodeURIComponent(filename)}`, "_blank");
+  };
+
+  const filteredBooks = books.filter(
+    (book) =>
+      book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      book.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const totalPages = Math.ceil(filteredBooks.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const currentBooks = filteredBooks.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  // Reset to first page when search changes
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1);
   };
 
   return (
@@ -106,45 +96,109 @@ const LibraryPage = () => {
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-10"
+            className="mb-8"
         >
             <span className="text-gold font-medium text-sm">مكتبتنا الرقمية</span>
             <h1 className="text-3xl md:text-4xl font-heading font-bold text-foreground mt-2">المكتبة القانونية</h1>
             <div className="w-16 h-1 bg-gold mt-4 rounded-full" />
+            <p className="text-muted-foreground mt-4 text-sm">تضم المكتبة أكثر من {books.length} ملفاً من القوانين واللوائح.</p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {books.map((book, index) => (
-                <motion.div
-                    key={book.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    whileHover={{ y: -5, transition: { duration: 0.2 } }}
-                    className="bg-card p-6 rounded-xl shadow-sm border border-border flex flex-col sm:flex-row gap-5 group hover:border-gold/50 hover:shadow-elegant transition-all duration-300"
-                >
-                    <div className="w-14 h-14 rounded-lg bg-navy flex items-center justify-center shrink-0 group-hover:bg-gold transition-all duration-300 shadow-sm">
-                        <BookOpen className="w-6 h-6 text-gold group-hover:text-navy transition-colors duration-300" />
-                    </div>
-                    <div className="flex-1 flex flex-col justify-between">
-                        <div className="space-y-2">
-                            <div className="flex items-center justify-between gap-2">
-                                <h3 className="font-heading font-bold text-foreground text-sm md:text-base leading-tight group-hover:text-gold transition-colors">{book.title}</h3>
-                                <span className="text-[10px] bg-navy/5 text-navy px-2 py-0.5 rounded-full uppercase font-extrabold tracking-wider whitespace-nowrap">{book.category}</span>
-                            </div>
-                            <p className="text-muted-foreground text-xs leading-relaxed line-clamp-2">{book.description}</p>
-                        </div>
-                        <button 
-                            onClick={() => handleDownload(book.filename)}
-                            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 text-xs bg-navy text-primary-foreground font-bold px-4 py-2 rounded-lg hover:bg-gold hover:text-navy transition-all duration-300 mt-4 shadow-sm group/btn"
+        {/* Search Bar */}
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="mb-10 max-w-md relative"
+        >
+            <div className="relative flex items-center">
+              <input
+                type="text"
+                placeholder="ابحث عن ملف..."
+                value={searchQuery}
+                onChange={handleSearchChange}
+                className="w-full bg-white text-gray-900 placeholder:text-gray-500 border border-border shadow-sm rounded-xl px-12 py-3 text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all"
+              />
+              <Search className="w-5 h-5 text-muted-foreground absolute right-4 pointer-events-none" />
+            </div>
+        </motion.div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            <AnimatePresence mode="popLayout">
+                {currentBooks.length > 0 ? (
+                    currentBooks.map((book) => (
+                        <motion.div
+                            key={book.id}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.2 }}
+                            whileHover={{ y: -5, transition: { duration: 0.2 } }}
+                            className="bg-card p-6 rounded-xl shadow-sm border border-border flex flex-col sm:flex-row gap-5 group hover:border-gold/50 hover:shadow-elegant transition-all duration-300"
                         >
-                            <Download className="w-3.5 h-3.5 transition-transform group-hover/btn:translate-y-0.5" />
-                            تحميل الملف
-                        </button>
-                    </div>
-                </motion.div>
-            ))}
+                            <div className="w-14 h-14 rounded-lg bg-navy flex items-center justify-center shrink-0 group-hover:bg-gold transition-all duration-300 shadow-sm">
+                                <BookOpen className="w-6 h-6 text-gold group-hover:text-navy transition-colors duration-300" />
+                            </div>
+                            <div className="flex-1 flex flex-col justify-between">
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <h3 className="font-heading font-bold text-foreground text-sm md:text-base leading-tight group-hover:text-gold transition-colors line-clamp-2" title={book.title}>
+                                            {book.title}
+                                        </h3>
+                                    </div>
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <span className="text-[10px] bg-navy/5 text-navy px-2 py-0.5 rounded-full uppercase font-extrabold tracking-wider whitespace-nowrap">{book.category}</span>
+                                    </div>
+                                    <p className="text-muted-foreground text-xs leading-relaxed line-clamp-2">{book.description}</p>
+                                </div>
+                                <button 
+                                    onClick={() => handleDownload(book.filename)}
+                                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 text-xs bg-navy text-primary-foreground font-bold px-4 py-2 rounded-lg hover:bg-gold hover:text-navy transition-all duration-300 mt-4 shadow-sm group/btn"
+                                >
+                                    <Download className="w-3.5 h-3.5 transition-transform group-hover/btn:translate-y-0.5" />
+                                    تحميل الملف
+                                </button>
+                            </div>
+                        </motion.div>
+                    ))
+                ) : (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="col-span-full text-center py-20"
+                    >
+                        <p className="text-muted-foreground text-lg">لم يتم العثور على ملفات تطابق بحثك.</p>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-4 mt-8">
+                <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded-lg bg-navy text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gold transition-colors"
+                    aria-label="الصفحة السابقة"
+                >
+                    <ChevronRight className="w-5 h-5" />
+                </button>
+                
+                <span className="text-sm font-medium text-navy">
+                    صفحة {currentPage} من {totalPages}
+                </span>
+
+                <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="p-2 rounded-lg bg-navy text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gold transition-colors"
+                    aria-label="الصفحة التالية"
+                >
+                    <ChevronLeft className="w-5 h-5" />
+                </button>
+            </div>
+        )}
       </div>
     </div>
   );

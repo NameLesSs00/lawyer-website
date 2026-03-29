@@ -88,21 +88,17 @@ const HeroSection = () => {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="flex-1 flex justify-center lg:justify-end"
+            className="flex-1 flex justify-center lg:justify-end w-full mt-10 lg:mt-0"
           >
-            <div className="relative w-80 h-80 md:w-96 md:h-96">
-              <div className="absolute inset-0 rounded-full border-4 border-gold/20 animate-pulse" />
-              <div className="absolute inset-4 rounded-full border-2 border-gold/10" />
-              <div className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-full p-4">
-                <Image 
-                  src="/images/profile.jpeg" 
-                  alt="المحامي ميلاد يعقوب بولس / Milad Yacoub Boulos"
-                  width={400}
-                  height={400}
-                  priority
-                  className="w-full h-full object-cover rounded-full shadow-2xl scale-110"
-                />
-              </div>
+            <div className="relative w-full max-w-sm md:max-w-md lg:max-w-[400px] rounded-2xl overflow-hidden shadow-2xl shadow-navy/50 border border-gold/20">
+              <Image 
+                src="/images/profile.jpeg" 
+                alt="المحامي ميلاد يعقوب بولس / Milad Yacoub Boulos"
+                width={500}
+                height={600}
+                priority
+                className="w-full h-auto object-cover"
+              />
             </div>
           </motion.div>
         </div>

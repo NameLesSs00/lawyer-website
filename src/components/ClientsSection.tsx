@@ -33,7 +33,7 @@ const clients = [
 
 const ClientsSection = () => {
   return (
-    <section className="section-padding bg-navy/5">
+    <section className="section-padding bg-navy text-white">
       <div className="container-custom">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -42,7 +42,7 @@ const ClientsSection = () => {
           className="text-center mb-12"
         >
           <span className="text-gold font-bold text-sm tracking-widest uppercase mb-2 block">شركاء النجاح</span>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold text-navy mt-2">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold text-white mt-2">
             أبرز الموكلين
           </h2>
           <div className="w-20 h-1.5 bg-gold mx-auto mt-6 rounded-full" />
