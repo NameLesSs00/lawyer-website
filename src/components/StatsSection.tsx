@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { motion, useInView, useAnimation } from "framer-motion";
+import { motion, useInView } from "framer-motion";
 
 const stats = [
   { id: 1, title: "قضية ناجحة", value: 1250, suffix: "+" },
@@ -15,7 +15,6 @@ const Counter = ({ from, to, duration = 2 }: { from: number; to: number; duratio
 
   useEffect(() => {
     if (inView) {
-      let startTimeout: NodeJS.Timeout;
       let startTime: number | null = null;
       
       const step = (timestamp: number) => {
@@ -32,7 +31,7 @@ const Counter = ({ from, to, duration = 2 }: { from: number; to: number; duratio
         }
       };
 
-      startTimeout = setTimeout(() => {
+      const startTimeout = setTimeout(() => {
         window.requestAnimationFrame(step);
       }, 300);
 

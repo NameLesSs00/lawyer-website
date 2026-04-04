@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
-import Link from "next/link";
-import { ChevronLeft, Award, ShieldCheck, Scale } from "lucide-react";
+import { Award, ShieldCheck, Scale } from "lucide-react";
 
 const AboutSection = () => {
   return (

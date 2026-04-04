@@ -82,7 +82,7 @@ const LibraryPage = ({ localBooks }: LibraryPageProps) => {
       }
     };
     fetchPDFs();
-  }, []);
+  }, [localBooks]);
 
   const handleDownload = (link: string) => {
     window.open(link, "_blank");
