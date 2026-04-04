@@ -44,7 +44,12 @@ next-env.d.ts
 /not used/
 firebase-debug.log
 firebase-debug.*.log
-
+/newPDFS/
+/public/newPDFS/
+/uploadWorks.mjs
+/uploadPDFs.mjs
+/extract_pdf.js
+/public/works
 # Editor directories
 .vscode/
 .idea/
