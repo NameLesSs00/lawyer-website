@@ -33,40 +33,39 @@ const clients = [
 
 const ClientsSection = () => {
   return (
-    <section className="section-padding bg-navy text-white">
+    <section className="py-6 bg-background border-t border-border">
       <div className="container-custom">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-12"
+          className="text-center mb-8"
         >
-          <span className="text-gold font-bold text-sm tracking-widest uppercase mb-2 block">شركاء النجاح</span>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold text-white mt-2">
-            أبرز الموكلين
+          <span className="text-gold font-bold text-xs tracking-widest uppercase mb-1 block">شركاء النجاح</span>
+          <h2 className="text-xl md:text-2xl font-heading text-gold opacity-90 mt-2">
+            بعض الموكلين لدي المكتب
           </h2>
-          <div className="w-20 h-1.5 bg-gold mx-auto mt-6 rounded-full" />
+          <div className="w-16 h-1 bg-gold/50 mx-auto mt-4 rounded-full" />
         </motion.div>
 
         <motion.div 
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-50px" }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          viewport={{ once: true, margin: "-20px" }}
+          className="grid grid-cols-2 lg:grid-cols-3 gap-4"
         >
           {clients.map((client) => (
             <motion.div
               key={client}
               variants={itemVariants}
               whileHover={{ 
-                y: -5,
-                boxShadow: "0 10px 30px -5px rgba(0, 0, 0, 0.08)"
+                y: -3,
+                boxShadow: "0 10px 30px -5px rgba(0, 0, 0, 0.2)"
               }}
-              className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center text-center group transition-all duration-300 cursor-default min-h-[140px] relative overflow-hidden hover:border-[#e3b131]"
+              className="bg-card p-4 rounded-lg flex items-center justify-center text-center transition-all duration-300 cursor-default min-h-[80px] border border-border hover:border-gold group"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-navy/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-              <span className="text-gray-800 font-heading font-extrabold text-xl md:text-2xl leading-snug group-hover:text-navy transition-colors duration-300 relative z-10 w-full px-4 break-words">
+              <span className="text-muted-foreground font-heading text-sm md:text-base leading-snug group-hover:text-foreground transition-colors duration-300 relative z-10 w-full px-2 break-words">
                 {client}
               </span>
             </motion.div>

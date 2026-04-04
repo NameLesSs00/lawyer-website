@@ -13,13 +13,13 @@ const containerVariants: Variants = {
 };
 
 const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 40 },
+  hidden: { opacity: 0, y: 50 },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.7,
-      ease: [0.21, 0.47, 0.32, 0.98],
+      duration: 0.8,
+      ease: [0.16, 1, 0.3, 1],
     },
   },
 };
@@ -56,7 +56,7 @@ const LatestNews = () => {
   }, []);
 
   return (
-    <section className="section-padding bg-blue-light-custom">
+    <section className="section-padding bg-background border-t border-gold/10">
       <div className="container-custom">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -70,7 +70,7 @@ const LatestNews = () => {
           </div>
           <Link
             href="/news"
-            className="hidden md:inline-flex items-center gap-2 text-navy font-medium text-sm hover:text-gold transition-colors"
+            className="hidden md:inline-flex items-center gap-2 text-white font-medium text-sm hover:text-gold transition-colors"
           >
             عرض الكل
             <ArrowLeft className="w-4 h-4" />
@@ -100,7 +100,7 @@ const LatestNews = () => {
               >
                 <div className="p-6">
                   <div className="flex items-center gap-2 mb-4">
-                    <div className="w-8 h-8 rounded-full bg-navy/5 flex items-center justify-center icon-box-hover">
+                    <div className="w-8 h-8 rounded-full bg-gold/10 flex items-center justify-center icon-box-hover">
                       <Scale className="w-4 h-4 text-gold icon-color-hover" />
                     </div>
                     <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">

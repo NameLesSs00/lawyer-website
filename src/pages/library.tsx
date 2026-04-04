@@ -213,7 +213,7 @@ const LibraryPage = ({ localBooks }: LibraryPageProps) => {
                     <ChevronRight className="w-5 h-5" />
                 </button>
                 
-                <span className="text-sm font-medium text-navy">
+                <span className="text-sm font-medium text-white">
                     صفحة {currentPage} من {totalPages}
                 </span>
 
