@@ -5,6 +5,7 @@ import { Scale } from "lucide-react";
 const navItems = [
   { label: "الرئيسية", path: "/" },
   { label: "أخبار القانون", path: "/news" },
+  { label: "أحدث أعمالنا", path: "/works" },
   { label: "المكتبة القانونية", path: "/library" },
   { label: "الخدمات", path: "/services" },
   {
