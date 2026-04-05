@@ -13,7 +13,7 @@ import {
   orderBy
 } from "firebase/firestore";
 import { motion } from "framer-motion";
-import { FileText, Newspaper, LogOut, Plus, Edit, Trash2, X, Briefcase } from "lucide-react";
+import { FileText, Newspaper, LogOut, Plus, Edit, Trash2, X, Tag, Search, Filter } from "lucide-react";
 import { signOut } from "firebase/auth";
 import { auth } from "../../lib/firebase";
 import { useRouter } from "next/router";
@@ -27,39 +27,45 @@ type NewsItem = {
 
 type PDFItem = {
   id: string;
-  Title: string;
+  title: string;
   category: string;
   content: string;
   link: string;
 };
 
-type WorkItem = {
+type CategoryItem = {
   id: string;
-  title: string;
-  content: string;
-  link: string;
+  category: string;
+  order: number;
 };
 
 export default function AdminDashboard() {
-  const { user, loading } = useAuth(true); // require auth
+  const { user, loading } = useAuth(true);
   const router = useRouter();
   
-  const [activeTab, setActiveTab] = useState<"news" | "pdfs" | "works">("news");
+  const [activeTab, setActiveTab] = useState<"news" | "pdfs" | "works" | "categories">("news");
   
   const [news, setNews] = useState<NewsItem[]>([]);
   const [pdfs, setPdfs] = useState<PDFItem[]>([]);
-  const [works, setWorks] = useState<WorkItem[]>([]);
+
+  const [categories, setCategories] = useState<CategoryItem[]>([]);
   
   // Modals / Forms state
   const [isNewsModalOpen, setIsNewsModalOpen] = useState(false);
   const [isPDFModalOpen, setIsPDFModalOpen] = useState(false);
-  const [isWorkModalOpen, setIsWorkModalOpen] = useState(false);
+
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
   // Form Data
   const [newsFormData, setNewsFormData] = useState({ title: "", content: "", date: "" });
-  const [pdfFormData, setPdfFormData] = useState({ Title: "", category: "", content: "", link: "" });
-  const [workFormData, setWorkFormData] = useState({ title: "", content: "", link: "" });
+  const [pdfFormData, setPdfFormData] = useState({ title: "", category: "", content: "", link: "" });
+
+  const [categoryFormData, setCategoryFormData] = useState({ category: "", order: 1 });
+
+  // PDF filters
+  const [pdfSearch, setPdfSearch] = useState("");
+  const [pdfCategoryFilter, setPdfCategoryFilter] = useState("all");
 
   const fetchData = async () => {
     try {
@@ -74,10 +80,11 @@ export default function AdminDashboard() {
       const pdfData = pdfSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PDFItem));
       setPdfs(pdfData);
 
-      // Fetch Works
-      const workSnapshot = await getDocs(collection(db, "Works"));
-      const workData = workSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WorkItem));
-      setWorks(workData);
+      // Fetch Categories ordered
+      const catQ = query(collection(db, "categories"), orderBy("order", "asc"));
+      const catSnapshot = await getDocs(catQ);
+      const catData = catSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CategoryItem));
+      setCategories(catData);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -120,13 +127,11 @@ export default function AdminDashboard() {
       content: newsFormData.content,
       date: Timestamp.fromDate(dateObj)
     };
-
     if (editingId) {
       await updateDoc(doc(db, "News", editingId), dataToSave);
     } else {
       await addDoc(collection(db, "News"), dataToSave);
     }
-    
     setIsNewsModalOpen(false);
     fetchData();
   };
@@ -143,10 +148,10 @@ export default function AdminDashboard() {
   // -------------------------------------------------------------------
   const openPDFModal = (item?: PDFItem) => {
     if (item) {
-      setPdfFormData({ Title: item.Title, category: item.category, content: item.content, link: item.link });
+      setPdfFormData({ title: item.title, category: item.category, content: item.content, link: item.link });
       setEditingId(item.id);
     } else {
-      setPdfFormData({ Title: "", category: "", content: "", link: "" });
+      setPdfFormData({ title: "", category: categories[0]?.category || "", content: "", link: "" });
       setEditingId(null);
     }
     setIsPDFModalOpen(true);
@@ -170,34 +175,51 @@ export default function AdminDashboard() {
     }
   };
 
+  const filteredPdfs = pdfs.filter(item => {
+    const matchesSearch =
+      item.title.toLowerCase().includes(pdfSearch.toLowerCase()) ||
+      item.content.toLowerCase().includes(pdfSearch.toLowerCase());
+    const matchesCategory =
+      pdfCategoryFilter === "all" || item.category === pdfCategoryFilter;
+    return matchesSearch && matchesCategory;
+  });
+
+
   // -------------------------------------------------------------------
-  // Works Handlers
+  // Categories Handlers
   // -------------------------------------------------------------------
-  const openWorkModal = (item?: WorkItem) => {
+  const openCategoryModal = (item?: CategoryItem) => {
     if (item) {
-      setWorkFormData({ title: item.title, content: item.content, link: item.link });
+      setCategoryFormData({ category: item.category, order: item.order });
       setEditingId(item.id);
     } else {
-      setWorkFormData({ title: "", content: "", link: "" });
+      const nextOrder = categories.length > 0 ? Math.max(...categories.map(c => c.order)) + 1 : 1;
+      setCategoryFormData({ category: "", order: nextOrder });
       setEditingId(null);
     }
-    setIsWorkModalOpen(true);
+    setIsCategoryModalOpen(true);
   };
 
-  const saveWork = async (e: React.FormEvent) => {
+  const saveCategory = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingId) {
-      await updateDoc(doc(db, "Works", editingId), workFormData);
+      await updateDoc(doc(db, "categories", editingId), { 
+        category: categoryFormData.category,
+        order: Number(categoryFormData.order)
+      });
     } else {
-      await addDoc(collection(db, "Works"), workFormData);
+      await addDoc(collection(db, "categories"), { 
+        category: categoryFormData.category, 
+        order: Number(categoryFormData.order) 
+      });
     }
-    setIsWorkModalOpen(false);
+    setIsCategoryModalOpen(false);
     fetchData();
   };
 
-  const deleteWork = async (id: string) => {
-    if (confirm("هل أنت متأكد من حذف هذا العمل؟")) {
-      await deleteDoc(doc(db, "Works", id));
+  const deleteCategory = async (id: string) => {
+    if (confirm("هل أنت متأكد من حذف هذا التصنيف؟ سيتأثر الـ PDFs المرتبطة به.")) {
+      await deleteDoc(doc(db, "categories", id));
       fetchData();
     }
   };
@@ -244,6 +266,16 @@ export default function AdminDashboard() {
           </button>
           
           <button
+            onClick={() => setActiveTab("categories")}
+            className={`flex items-center gap-3 px-5 py-4 rounded-xl text-sm font-bold transition-all ${
+              activeTab === "categories" ? "bg-gold text-navy shadow-lg" : "bg-card text-foreground border border-border hover:border-gold/50"
+            }`}
+          >
+            <Tag className="w-5 h-5" />
+            إدارة التصنيفات
+          </button>
+
+          <button
             onClick={() => setActiveTab("pdfs")}
             className={`flex items-center gap-3 px-5 py-4 rounded-xl text-sm font-bold transition-all ${
               activeTab === "pdfs" ? "bg-gold text-navy shadow-lg" : "bg-card text-foreground border border-border hover:border-gold/50"
@@ -253,19 +285,78 @@ export default function AdminDashboard() {
             المكتبة و الـ PDFs
           </button>
           
-          <button
-            onClick={() => setActiveTab("works")}
-            className={`flex items-center gap-3 px-5 py-4 rounded-xl text-sm font-bold transition-all ${
-              activeTab === "works" ? "bg-gold text-navy shadow-lg" : "bg-card text-foreground border border-border hover:border-gold/50"
-            }`}
-          >
-            <Briefcase className="w-5 h-5" />
-            إدارة الأعمال
-          </button>
         </div>
 
         {/* Content Area */}
         <div className="flex-1 bg-card border border-border rounded-2xl p-6 shadow-sm min-h-[60vh]">
+
+          {/* ==================== CATEGORIES TAB ==================== */}
+          {activeTab === "categories" && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <div className="flex justify-between items-center mb-6 border-b border-border pb-4">
+                <div>
+                  <h2 className="text-xl font-heading font-bold text-foreground">إدارة التصنيفات</h2>
+                  <p className="text-xs text-muted-foreground mt-1">يحدد الترتيب هنا ترتيب الـ Tabs في صفحة المكتبة</p>
+                </div>
+                <button 
+                  onClick={() => openCategoryModal()}
+                  className="flex items-center gap-2 bg-navy text-primary-foreground text-sm px-4 py-2 rounded-lg hover:bg-navy-light transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  إضافة تصنيف
+                </button>
+              </div>
+
+              {categories.length === 0 ? (
+                <p className="text-muted-foreground text-sm">لا توجد تصنيفات. أضف تصنيفاً جديداً.</p>
+              ) : (
+                <div className="overflow-x-auto rounded-xl border border-border">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-navy/40 text-foreground">
+                        <th className="px-4 py-3 text-right font-bold">اسم التصنيف</th>
+                        <th className="px-4 py-3 text-right font-bold w-32">عدد الملفات</th>
+                        <th className="px-4 py-3 text-center font-bold w-28">الإجراءات</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {categories.map((cat, idx) => {
+                        const count = pdfs.filter(p => p.category === cat.category).length;
+                        return (
+                          <tr key={cat.id} className={`border-t border-border hover:bg-navy/20 transition-colors ${idx % 2 === 0 ? "" : "bg-navy/10"}`}>
+                            <td className="px-4 py-3 font-semibold text-foreground">{cat.category}</td>
+                            <td className="px-4 py-3">
+                              <span className="text-xs bg-navy/20 text-muted-foreground px-2 py-1 rounded-full font-bold">{count} ملف</span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex gap-2 justify-center">
+                                <button 
+                                  onClick={() => openCategoryModal(cat)} 
+                                  className="p-1.5 text-blue-400 hover:bg-blue-400/10 rounded-md transition-colors"
+                                  title="تعديل"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </button>
+                                <button 
+                                  onClick={() => deleteCategory(cat.id)} 
+                                  className="p-1.5 text-destructive hover:bg-destructive/10 rounded-md transition-colors"
+                                  title="حذف"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {/* ==================== NEWS TAB ==================== */}
           {activeTab === "news" && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <div className="flex justify-between items-center mb-6 border-b border-border pb-4">
@@ -290,7 +381,7 @@ export default function AdminDashboard() {
                         {item.date?.toDate().toLocaleDateString('ar-EG')}
                       </span>
                       <div className="flex gap-2">
-                        <button onClick={() => openNewsModal(item)} className="p-1.5 text-navy hover:bg-navy/10 rounded-md transition-colors"><Edit className="w-4 h-4" /></button>
+                        <button onClick={() => openNewsModal(item)} className="p-1.5 text-blue-400 hover:bg-blue-400/10 rounded-md transition-colors"><Edit className="w-4 h-4" /></button>
                         <button onClick={() => deleteNews(item.id)} className="p-1.5 text-destructive hover:bg-destructive/10 rounded-md transition-colors"><Trash2 className="w-4 h-4" /></button>
                       </div>
                     </div>
@@ -300,6 +391,7 @@ export default function AdminDashboard() {
             </motion.div>
           )}
 
+          {/* ==================== PDFs TAB ==================== */}
           {activeTab === "pdfs" && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <div className="flex justify-between items-center mb-6 border-b border-border pb-4">
@@ -313,23 +405,51 @@ export default function AdminDashboard() {
                 </button>
               </div>
 
+              {/* Search & Filter Bar */}
+              <div className="flex flex-col sm:flex-row gap-3 mb-6">
+                <div className="relative shrink-0">
+                  <select
+                    value={pdfCategoryFilter}
+                    onChange={e => setPdfCategoryFilter(e.target.value)}
+                    className="border border-border rounded-lg pl-10 pr-4 py-2.5 min-w-[220px] text-sm focus:ring-1 focus:ring-gold outline-none text-foreground bg-background appearance-none cursor-pointer w-full sm:w-auto"
+                  >
+                    <option value="all">كل التصنيفات</option>
+                    {categories.map(cat => (
+                      <option key={cat.id} value={cat.category}>{cat.category}</option>
+                    ))}
+                  </select>
+                  <Filter className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    placeholder="ابحث في الملفات..."
+                    value={pdfSearch}
+                    onChange={e => setPdfSearch(e.target.value)}
+                    className="w-full border border-border rounded-lg pl-4 pr-10 py-2.5 text-sm focus:ring-1 focus:ring-gold outline-none text-foreground bg-background"
+                  />
+                  <Search className="w-4 h-4 text-muted-foreground absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+              </div>
+
+              <div className="text-xs text-muted-foreground mb-4 font-medium">
+                يعرض {filteredPdfs.length} من {pdfs.length} ملف
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {pdfs.length === 0 && <p className="text-muted-foreground text-sm col-span-full">لا توجد ملفات مضافة.</p>}
-                {pdfs.map(item => (
+                {filteredPdfs.length === 0 && <p className="text-muted-foreground text-sm col-span-full">لا توجد ملفات تطابق البحث.</p>}
+                {filteredPdfs.map(item => (
                   <div key={item.id} className="border border-border p-4 rounded-xl shadow-sm relative group bg-card hover:border-gold/50 transition-colors">
                     <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-bold text-sm line-clamp-2 text-foreground">{item.Title}</h3>
+                      <h3 className="font-bold text-sm line-clamp-2 text-foreground">{item.title}</h3>
                     </div>
-                    <span className="text-[10px] text-white bg-gold/10 px-2 py-1 rounded font-bold inline-block mb-3">
+                    <span className="text-[10px] text-gold bg-gold/10 px-2 py-1 rounded font-bold inline-block mb-3">
                       {item.category}
                     </span>
                     <p className="text-xs text-muted-foreground line-clamp-2 mb-4">{item.content}</p>
-                    <div className="flex justify-between items-center pt-2 border-t border-border">
-                      <a href={item.link} target="_blank" rel="noreferrer" className="text-xs text-navy hover:underline font-bold">
-                        رابط تحميل الملف
-                      </a>
+                    <div className="flex justify-end items-center pt-2 border-t border-border">
                       <div className="flex gap-2">
-                        <button onClick={() => openPDFModal(item)} className="p-1.5 text-navy hover:bg-navy/10 rounded-md transition-colors"><Edit className="w-4 h-4" /></button>
+                        <button onClick={() => openPDFModal(item)} className="p-1.5 text-blue-400 hover:bg-blue-400/10 rounded-md transition-colors"><Edit className="w-4 h-4" /></button>
                         <button onClick={() => deletePDF(item.id)} className="p-1.5 text-destructive hover:bg-destructive/10 rounded-md transition-colors"><Trash2 className="w-4 h-4" /></button>
                       </div>
                     </div>
@@ -339,47 +459,51 @@ export default function AdminDashboard() {
             </motion.div>
           )}
 
-          {activeTab === "works" && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <div className="flex justify-between items-center mb-6 border-b border-border pb-4">
-                <h2 className="text-xl font-heading font-bold text-foreground">سجل أحدث أعمالنا</h2>
-                <button 
-                  onClick={() => openWorkModal()}
-                  className="flex items-center gap-2 bg-navy text-primary-foreground text-sm px-4 py-2 rounded-lg hover:bg-navy-light transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  إضافة عمل جديد
-                </button>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {works.length === 0 && <p className="text-muted-foreground text-sm col-span-full">لا توجد أعمال مضافة.</p>}
-                {works.map(item => (
-                  <div key={item.id} className="border border-border p-4 rounded-xl shadow-sm relative group bg-card hover:border-gold/50 transition-colors">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-bold text-sm line-clamp-2 text-foreground">{item.title}</h3>
-                    </div>
-                    <p className="text-xs text-muted-foreground line-clamp-2 mb-4 mt-2">{item.content}</p>
-                    <div className="flex justify-between items-center pt-2 border-t border-border">
-                      {item.link ? (
-                        <a href={item.link} target="_blank" rel="noreferrer" className="text-xs text-navy hover:underline font-bold flex items-center gap-1">
-                          رابط العمل
-                        </a>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">بدون رابط</span>
-                      )}
-                      <div className="flex gap-2">
-                        <button onClick={() => openWorkModal(item)} className="p-1.5 text-navy hover:bg-navy/10 rounded-md transition-colors"><Edit className="w-4 h-4" /></button>
-                        <button onClick={() => deleteWork(item.id)} className="p-1.5 text-destructive hover:bg-destructive/10 rounded-md transition-colors"><Trash2 className="w-4 h-4" /></button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          )}
         </div>
       </div>
+
+      {/* ---------------- CATEGORY MODAL ---------------- */}
+      {isCategoryModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+            className="bg-card w-full max-w-md rounded-2xl shadow-xl overflow-hidden border border-border"
+          >
+            <div className="bg-navy p-4 flex justify-between items-center">
+              <h3 className="text-white font-bold">{editingId ? "تعديل التصنيف" : "إضافة تصنيف جديد"}</h3>
+              <button onClick={() => setIsCategoryModalOpen(false)} className="text-white/80 hover:text-white transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={saveCategory} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1.5 text-foreground">اسم التصنيف</label>
+                <input 
+                  type="text" required maxLength={50}
+                  value={categoryFormData.category} onChange={e => setCategoryFormData({ ...categoryFormData, category: e.target.value })}
+                  className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-gold outline-none text-foreground bg-background" 
+                  placeholder="مثال: كتب القانون، أحوال شخصية..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1.5 text-foreground">الترتيب</label>
+                <input 
+                  type="number" required min="1"
+                  value={categoryFormData.order} onChange={e => setCategoryFormData({ ...categoryFormData, order: Number(e.target.value) })}
+                  className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-gold outline-none text-foreground bg-background" 
+                  placeholder="مثال: 1"
+                />
+                <p className="text-xs text-muted-foreground mt-1 font-medium">سيتم عرض التصنيفات من الرقم الأصغر للأكبر</p>
+              </div>
+              <div className="flex gap-3 pt-4 border-t border-border">
+                <button type="submit" className="flex-1 bg-gold text-navy font-bold py-2.5 rounded-lg hover:bg-gold-light transition-colors">حفظ</button>
+                <button type="button" onClick={() => setIsCategoryModalOpen(false)} className="px-6 border border-border text-foreground py-2.5 rounded-lg hover:bg-muted transition-colors">إلغاء</button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
 
       {/* ---------------- NEWS MODAL ---------------- */}
       {isNewsModalOpen && (
@@ -453,27 +577,35 @@ export default function AdminDashboard() {
             <form onSubmit={savePDF} className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1.5 text-foreground flex justify-between">
-                  <span>Title (اسم المستند)</span>
+                  <span>title (اسم المستند)</span>
                   <span className="text-xs opacity-90 font-bold text-gold-dark">الحد الأقصى: 100 حرف</span>
                 </label>
                 <input 
                   type="text" required maxLength={100}
-                  value={pdfFormData.Title} onChange={e => setPdfFormData({...pdfFormData, Title: e.target.value})}
+                  value={pdfFormData.title} onChange={e => setPdfFormData({...pdfFormData, title: e.target.value})}
                   className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-gold outline-none text-foreground bg-background" 
                   placeholder="اكتب التايتل الصحيح..."
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1.5 text-foreground flex justify-between">
-                  <span>التصنيف</span>
-                  <span className="text-xs opacity-90 font-bold text-gold-dark">الحد الأقصى: 50 حرف</span>
-                </label>
-                <input 
-                  type="text" required maxLength={50}
-                  value={pdfFormData.category} onChange={e => setPdfFormData({...pdfFormData, category: e.target.value})}
-                  className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-gold outline-none text-foreground bg-background" 
-                  placeholder="مثال: أحوال شخصية، مدني..."
-                />
+                <label className="block text-sm font-medium mb-1.5 text-foreground">التصنيف</label>
+                {categories.length > 0 ? (
+                  <select
+                    required
+                    value={pdfFormData.category}
+                    onChange={e => setPdfFormData({...pdfFormData, category: e.target.value})}
+                    className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-gold outline-none text-foreground bg-background cursor-pointer"
+                  >
+                    <option value="" disabled>اختر التصنيف...</option>
+                    {categories.map(cat => (
+                      <option key={cat.id} value={cat.category}>{cat.category}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="w-full border border-border rounded-lg px-3 py-2 text-sm text-muted-foreground bg-background">
+                    لا توجد تصنيفات — أضف تصنيفاً أولاً من تبويب &quot;إدارة التصنيفات&quot;
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1.5 text-foreground flex justify-between">
@@ -507,63 +639,6 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* ---------------- WORK MODAL ---------------- */}
-      {isWorkModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-            className="bg-card w-full max-w-lg rounded-2xl shadow-xl overflow-hidden border border-border"
-          >
-            <div className="bg-navy p-4 flex justify-between items-center">
-              <h3 className="text-white font-bold">{editingId ? "تعديل العمل" : "إضافة عمل جديد"}</h3>
-              <button onClick={() => setIsWorkModalOpen(false)} className="text-white/80 hover:text-white transition-colors">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <form onSubmit={saveWork} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1.5 text-foreground flex justify-between">
-                  <span>عنوان العمل</span>
-                  <span className="text-xs opacity-90 font-bold text-gold-dark">الحد الأقصى: 100 حرف</span>
-                </label>
-                <input 
-                  type="text" required maxLength={100}
-                  value={workFormData.title} onChange={e => setWorkFormData({...workFormData, title: e.target.value})}
-                  className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-gold outline-none text-foreground bg-background" 
-                  placeholder="اسم أو عنوان العمل..."
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1.5 text-foreground flex justify-between">
-                  <span>تفاصيل العمل</span>
-                  <span className="text-xs opacity-90 font-bold text-gold-dark">الحد الأقصى: 300 حرف</span>
-                </label>
-                <textarea 
-                  required maxLength={300} rows={4}
-                  value={workFormData.content} onChange={e => setWorkFormData({...workFormData, content: e.target.value})}
-                  className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-gold outline-none resize-none text-foreground bg-background" 
-                  placeholder="وصف للعمل وما تم إنجازه..."
-                />
-                <p className="text-xs text-muted-foreground mt-1 text-left font-medium">{workFormData.content.length}/300</p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1.5 text-foreground">رابط العمل (Google Drive وغيره) - اختياري</label>
-                <input 
-                  type="url"
-                  value={workFormData.link} onChange={e => setWorkFormData({...workFormData, link: e.target.value})}
-                  className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-gold outline-none text-left text-foreground bg-background" 
-                  placeholder="https://..."
-                  dir="ltr"
-                />
-              </div>
-              <div className="flex gap-3 pt-4 border-t border-border">
-                <button type="submit" className="flex-1 bg-gold text-navy font-bold py-2.5 rounded-lg hover:bg-gold-light transition-colors">حفظ التغييرات</button>
-                <button type="button" onClick={() => setIsWorkModalOpen(false)} className="px-6 border border-border text-foreground py-2.5 rounded-lg hover:bg-muted transition-colors">إلغاء</button>
-              </div>
-            </form>
-          </motion.div>
-        </div>
-      )}
     </div>
   );
 }

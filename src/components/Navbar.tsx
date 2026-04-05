@@ -6,7 +6,6 @@ const navItems = [
   { label: "الرئيسية", path: "/" },
   { label: "أخبار القانون", path: "/news" },
   { label: "المكتبة القانونية", path: "/library" },
-  { label: "أحدث أعمالنا", path: "/works" },
   { label: "الخدمات", path: "/services" },
   {
     label: "مصر الرقمية",
