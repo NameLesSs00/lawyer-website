@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://miladyacoub-law.com
+
+# Sitemaps
+Sitemap: https://miladyacoub-law.com/sitemap.xml

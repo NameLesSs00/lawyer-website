@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Gavel, FileText, Users, Shield, Building, Handshake, Scale, Briefcase } from "lucide-react";
+import SEO from "@/components/SEO";
 
 const services = [
   { icon: Gavel, title: "الجنايات والجنح", desc: "ترافعنا فى الكثير من قضايا الجنايات والقضايا السياسية والفكرية الكبرى أمام جميع المحاكم." },
@@ -15,6 +16,11 @@ const services = [
 const ServicesPage = () => {
   return (
     <div className="section-padding bg-background min-h-screen">
+      <SEO 
+        title="خدماتنا القانونية في الغردقة | ميلاد يعقوب بولس"
+        description="نقدم خدمات قانونية متخصصة في الغردقة والبحر الأحمر: جنايات، جرائم اقتصادية، جرائم إنترنت، منازعات عقارية، وصياغة عقود."
+        keywords="محامي جنائي الغردقة، قضايا عقارات البحر الأحمر، صياغة عقود، جرائم الإنترنت، محامي أحوال شخصية الغردقة"
+      />
       <div className="container-custom">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

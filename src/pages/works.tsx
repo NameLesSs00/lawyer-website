@@ -3,8 +3,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Download, Search, ChevronRight, ChevronLeft, Briefcase } from "lucide-react";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../lib/firebase";
+import SEO from "@/components/SEO";
 
-type Book = {
+type Work = {
   id: string;
   title: string;
   category: string;
@@ -16,7 +17,7 @@ const ITEMS_PER_PAGE = 12;
 const WORKS_CATEGORY = "احدث الاعمال";
 
 const WorksPage = () => {
-  const [works, setWorks] = useState<Book[]>([]);
+  const [works, setWorks] = useState<Work[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -26,7 +27,7 @@ const WorksPage = () => {
       try {
         const q = query(collection(db, "PDFS"), where("category", "==", WORKS_CATEGORY));
         const snapshot = await getDocs(q);
-        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Book));
+        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Work));
         setWorks(data);
       } catch (error) {
         console.error("Error fetching works data:", error);
@@ -67,6 +68,11 @@ const WorksPage = () => {
 
   return (
     <div className="section-padding bg-background min-h-screen">
+      <SEO 
+        title="أحدث أعمالنا القانونية | ميلاد يعقوب بولس"
+        description="استعرض سجل الإنجازات وأحدث القضايا التي ترافنا فيها بمكتب ميلاد يعقوب بولس للمحاماة بالغردقة والبحر الأحمر."
+        keywords="قضايا جنائية ناجحة، أعمال محاماة الغردقة، إنجازات قانونية، ميلاد بولس"
+      />
       <div className="container-custom">
         {/* Page Title */}
         <motion.div

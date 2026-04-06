@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
+import JsonLd from "@/components/JsonLd";
 import React from "react";
 import "@/styles/globals.css";
 
@@ -18,6 +19,7 @@ export default function App({ Component, pageProps }: AppProps) {
         <Toaster />
         <Sonner />
         <SEO />
+        <JsonLd />
         <div className="flex flex-col min-h-screen font-cairo bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-50">
           <Navbar />
           <main className="flex-1">

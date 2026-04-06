@@ -4,6 +4,7 @@ import { Calendar, ChevronRight, ChevronLeft } from "lucide-react";
 import { useState, useEffect } from "react";
 import { collection, getDocs, query, orderBy, Timestamp } from "firebase/firestore";
 import { db } from "../lib/firebase";
+import SEO from "@/components/SEO";
 
 type NewsItem = {
   id: string;
@@ -48,6 +49,11 @@ const NewsPage = () => {
 
   return (
     <div className="section-padding bg-background min-h-screen">
+      <SEO 
+        title="أخبار القانون والتشريعات | مكتب ميلاد يعقوب بولس"
+        description="تابع آخر أخبار القانون، التعديلات التشريعية الجديدة، وأهم القضايا القانونية في مصر من خلال قسم أخبار القانون بمكتبنا."
+        keywords="أخبار القانون، تشريعات جديدة، قضايا مصرية، أخبار المحاماة، ميلاد بولس"
+      />
       <div className="container-custom">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

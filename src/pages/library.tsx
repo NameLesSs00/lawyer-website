@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { BookOpen, Download, Search, ChevronRight, ChevronLeft } from "lucide-react";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { db } from "../lib/firebase";
+import SEO from "@/components/SEO";
 
 type Book = {
   id: string;
@@ -67,8 +68,8 @@ const LibraryPage = () => {
   const filteredBooks = books.filter((book) => {
     const matchesCategory = activeCategory ? book.category === activeCategory : true;
     const matchesSearch =
-      book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      book.content.toLowerCase().includes(searchQuery.toLowerCase());
+      (book.title || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (book.content || "").toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
@@ -96,6 +97,11 @@ const LibraryPage = () => {
 
   return (
     <div className="section-padding bg-background min-h-screen">
+      <SEO 
+        title="المكتبة القانونية الرقمية | ميلاد يعقوب بولس"
+        description="تصفح وتحميل أهم القوانين المصرية، اللوائح التنفيذية، والدستور المصري من خلال مكتبتنا القانونية الرقمية الشاملة."
+        keywords="قوانين مصرية، تحميل الدستور، لوائح تنفيذية، كتب قانونية، مرجع قانوني الغردقة"
+      />
       <div className="container-custom">
         {/* Page Title */}
         <motion.div

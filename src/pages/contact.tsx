@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Send, Phone, MapPin, Clock } from "lucide-react";
 import Link from "next/link";
 import { z } from "zod";
+import SEO from "@/components/SEO";
 
 const contactSchema = z.object({
   name: z.string().trim().min(1, "الاسم مطلوب").max(100),
@@ -41,6 +42,11 @@ const ContactPage = () => {
 
   return (
     <div className="section-padding bg-background min-h-screen">
+      <SEO 
+        title="تواصل مع مكتب ميلاد يعقوب بولس | محامي الغردقة"
+        description="تواصل معنا للحصول على استشارة قانونية في الغردقة. نحن هنا لمساعدتك في قضايا الجنايات، الأسرة، والنزاعات العقارية. اتصل بنا الآن."
+        keywords="رقم محامي في الغردقة، استشارة قانونية، تواصل مع محامي، مكتب محاماة البحر الأحمر"
+      />
       <div className="container-custom">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
